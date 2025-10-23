@@ -1,5 +1,4 @@
-# [SpeedRunEthereum](https://speedrunethereum.com/)
- Challenges
+# [SpeedRunEthereum](https://speedrunethereum.com/) Challenges
 
 - Each challenge has its own branch.
 - FE is deployed on [Vercel](https://vercel.com/).
