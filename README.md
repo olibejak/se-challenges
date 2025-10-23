@@ -1,8 +1,8 @@
 # SpeedRunEthereum Challenges
 
-[ ] Each challenge has its own branch.
-[ ] FE is deployed on [Vercel](https://vercel.com/).
-[ ] Contracts are deployed on [Sepolia Testnet](https://sepolia.etherscan.io/).
+- Each challenge has its own branch.
+- FE is deployed on [Vercel](https://vercel.com/).
+- Contracts are deployed on [Sepolia Testnet](https://sepolia.etherscan.io/).
 
 ## 🚩 Challenge: 🎟 Tokenization
 Branch: [tokenization](https://github.com/olibejak/se-challenges/tree/tokenization)
