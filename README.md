@@ -17,10 +17,10 @@
 - FE: [vercel.app](https://token-vendor-olibejak.vercel.app/)
 
 ## 🚩 Challenge: 🎲 Dice Game
-- Branch: [decentralized-staking](https://github.com/olibejak/se-challenges/tree/dice-game)
+- Branch: [dice-game](https://github.com/olibejak/se-challenges/tree/dice-game)
 - FE: [vercel.app](https://dice-game-olibejak.vercel.app/)
 
 
 ## 🚩 Challenge: ⚖️ Build a DEX Challenge
-- Branch: [decentralized-staking](https://github.com/olibejak/se-challenges/tree/dex)
+- Branch: [dex](https://github.com/olibejak/se-challenges/tree/dex)
 - FE: [vercel.app](https://dex-olibejak.vercel.app/)
