@@ -45,52 +45,110 @@ contract Lending is Ownable {
     /**
      * @notice Allows users to add collateral to their account
      */
-    function addCollateral() public payable {}
+    function addCollateral() public payable {
+        if(msg.value == 0) {
+            revert Lending__InvalidAmount();
+        }
+
+        s_userCollateral[msg.sender] += msg.value;
+
+        emit CollateralAdded(msg.sender, msg.value, i_cornDEX.currentPrice());
+    }
 
     /**
      * @notice Allows users to withdraw collateral as long as it doesn't make them liquidatable
      * @param amount The amount of collateral to withdraw
      */
-    function withdrawCollateral(uint256 amount) public {}
+    function withdrawCollateral(uint256 amount) public {
+        if(amount == 0 || amount > s_userCollateral[msg.sender]) {
+            revert Lending__InvalidAmount();
+        }
+
+        s_userCollateral[msg.sender] -= amount;
+        _validatePosition(msg.sender);
+        payable(msg.sender).transfer(amount);
+
+        emit CollateralWithdrawn(msg.sender, amount, i_cornDEX.currentPrice());
+    }
 
     /**
      * @notice Calculates the total collateral value for a user based on their collateral balance
      * @param user The address of the user to calculate the collateral value for
      * @return uint256 The collateral value
      */
-    function calculateCollateralValue(address user) public view returns (uint256) {}
+    function calculateCollateralValue(address user) public view returns (uint256) {
+        return (s_userCollateral[user] * i_cornDEX.currentPrice()) / 1e18;
+    }
 
     /**
      * @notice Calculates the position ratio for a user to ensure they are within safe limits
      * @param user The address of the user to calculate the position ratio for
      * @return uint256 The position ratio
      */
-    function _calculatePositionRatio(address user) internal view returns (uint256) {}
+    function _calculatePositionRatio(address user) internal view returns (uint256) {
+      if(s_userBorrowed[user] == 0) {
+          return type(uint256).max;
+      }
+
+        return (calculateCollateralValue(user) * 1e18) / s_userBorrowed[user];
+    }
 
     /**
      * @notice Checks if a user's position can be liquidated
      * @param user The address of the user to check
      * @return bool True if the position is liquidatable, false otherwise
      */
-    function isLiquidatable(address user) public view returns (bool) {}
+    function isLiquidatable(address user) public view returns (bool) {
+        return _calculatePositionRatio(user) < COLLATERAL_RATIO * 1e16;
+    }
 
     /**
      * @notice Internal view method that reverts if a user's position is unsafe
      * @param user The address of the user to validate
      */
-    function _validatePosition(address user) internal view {}
+    function _validatePosition(address user) internal view {
+        if(isLiquidatable(user)) {
+           revert Lending__UnsafePositionRatio();
+        }
+    }
 
     /**
      * @notice Allows users to borrow corn based on their collateral
      * @param borrowAmount The amount of corn to borrow
      */
-    function borrowCorn(uint256 borrowAmount) public {}
+    function borrowCorn(uint256 borrowAmount) public {
+      if(borrowAmount == 0) {
+          revert Lending__InvalidAmount();
+      }
+
+      s_userBorrowed[msg.sender] += borrowAmount;
+
+      if(i_corn.transfer(msg.sender, borrowAmount) == false) {
+          revert Lending__BorrowingFailed();
+      }
+
+      _validatePosition(msg.sender);
+
+      emit AssetBorrowed(msg.sender, borrowAmount, i_cornDEX.currentPrice());
+    }
 
     /**
      * @notice Allows users to repay corn and reduce their debt
      * @param repayAmount The amount of corn to repay
      */
-    function repayCorn(uint256 repayAmount) public {}
+    function repayCorn(uint256 repayAmount) public {
+        if(repayAmount == 0 || repayAmount > s_userBorrowed[msg.sender]) {
+            revert Lending__InvalidAmount();
+        }
+
+        s_userBorrowed[msg.sender] -= repayAmount;
+
+        if(i_corn.transferFrom(msg.sender, address(this), repayAmount) == false) {
+            revert Lending__RepayingFailed();
+        }
+
+        emit AssetRepaid(msg.sender, repayAmount, i_cornDEX.currentPrice());
+    }
 
     /**
      * @notice Allows liquidators to liquidate unsafe positions
@@ -98,5 +156,36 @@ contract Lending is Ownable {
      * @dev The caller must have enough CORN to pay back user's debt
      * @dev The caller must have approved this contract to transfer the debt
      */
-    function liquidate(address user) public {}
+    function liquidate(address user) public {
+        if (isLiquidatable(user) == false) {
+            revert Lending__NotLiquidatable();
+        }
+
+        uint256 borrowed = s_userBorrowed[user];
+        s_userBorrowed[user] = 0;
+        
+        if (i_corn.balanceOf(msg.sender) < borrowed) {
+            revert Lending__InsufficientLiquidatorCorn();
+        }
+
+        uint256 baseCollateralAmount = (borrowed * 1e18) / i_cornDEX.currentPrice();
+        uint256 rewardCollateralAmount = (baseCollateralAmount * LIQUIDATOR_REWARD) / 100;
+        uint256 totalCollateralAmount = baseCollateralAmount + rewardCollateralAmount;
+        if (totalCollateralAmount > s_userCollateral[user]) {
+            totalCollateralAmount = s_userCollateral[user];
+        }
+
+        s_userCollateral[user] -= totalCollateralAmount;
+
+        i_corn.transferFrom(msg.sender, address(this), borrowed);
+        payable(msg.sender).transfer(totalCollateralAmount);
+
+        emit Liquidation(
+            user,
+            msg.sender,
+            totalCollateralAmount,
+            borrowed,
+            i_cornDEX.currentPrice()
+        );
+    }
 }
