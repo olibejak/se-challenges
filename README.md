@@ -24,3 +24,7 @@
 ## 🚩 Challenge: ⚖️ Build a DEX Challenge
 - Branch: [dex](https://github.com/olibejak/se-challenges/tree/dex)
 - FE: [vercel.app](https://dex-olibejak.vercel.app/)
+
+## 💳🌽 Over-Collateralized Lending
+- Branch: [over-collateralized-lending](https://github.com/olibejak/se-challenges/tree/over-collateralized-lending)
+- FE: [vercel.app](https://over-collateralized-lending-olibejak.vercel.app/)
