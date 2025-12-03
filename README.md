@@ -21,7 +21,7 @@
 - FE: [vercel.app](https://dice-game-olibejak.vercel.app/)
 
 
-## 🚩 Challenge: ⚖️ Build a DEX Challenge
+## 🚩 Challenge: ⚖️ Build a DEX
 - Branch: [dex](https://github.com/olibejak/se-challenges/tree/dex)
 - FE: [vercel.app](https://dex-olibejak.vercel.app/)
 
@@ -32,3 +32,7 @@
 ## 🚩 Challenge: 💰 Stablecoins
 - Branch: [stablecoins](https://github.com/olibejak/se-challenges/tree/stablecoins)
 - FE: [vercel.app](https://stablecoins-olibejak.vercel.app/)
+
+## 🚩 Challenge: 📈📉🏎️ Prediction Markets
+- Branch: [prediction-markets](https://github.com/olibejak/se-challenges/tree/prediction-markets)
+- FE: [vercel.app](https://prediction-markets-olibejak.vercel.app/)
