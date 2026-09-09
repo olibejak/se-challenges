@@ -30,6 +30,9 @@ contract Voting is Ownable {
     uint256 private s_noVotes;
 
     /// Checkpoint 2 //////
+    LeanIMTData private s_tree;
+    mapping(address => bool) private s_hasRegistered;
+    mapping(uint256 => bool) private s_isCommitmentUsed;
 
     /// Checkpoint 6 //////
 
@@ -85,6 +88,21 @@ contract Voting is Ownable {
      */
     function register(uint256 _commitment) public {
         /// Checkpoint 2 //////
+        address sender = msg.sender;
+        (bool voter, bool registered) = getVoterData(sender);
+        if (!voter || registered ) {
+            revert Voting__NotAllowedToVote();
+        } 
+        if (s_isCommitmentUsed[_commitment]) {
+            revert Voting__CommitmentAlreadyAdded(_commitment);
+        }
+
+        s_isCommitmentUsed[_commitment] = true;
+        s_hasRegistered[msg.sender] = true;
+
+        uint256 index = s_tree.insert(_commitment);
+
+        emit NewLeaf(s_tree.size - 1, _commitment);
     }
 
     /**
@@ -124,14 +142,14 @@ contract Voting is Ownable {
         yesVotes = s_yesVotes;
         noVotes = s_noVotes;
         /// Checkpoint 2 //////
-        // size = s_tree.size;
-        // depth = s_tree.depth;
-        // root = s_tree.root();
+        size = s_tree.size;
+        depth = s_tree.depth;
+        root = s_tree.root();
     }
 
     function getVoterData(address _voter) public view returns (bool voter, bool registered) {
         voter = s_voters[_voter];
         // /// Checkpoint 2 //////
-        // registered = s_hasRegistered[_voter];
+        registered = s_hasRegistered[_voter];
     }
 }
