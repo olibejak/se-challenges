@@ -16,7 +16,7 @@
     "vercel:yolo": "vercel --build-env YARN_ENABLE_IMMUTABLE_INSTALLS=false --build-env ENABLE_EXPERIMENTAL_COREPACK=1 --build-env NEXT_PUBLIC_IGNORE_BUILD_ERROR=true --build-env VERCEL_TELEMETRY_DISABLED=1"
   },
   "dependencies": {
-    "@aztec/bb.js": "0.82.0",
+    "@aztec/bb.js": "0.82.2",
     "@heroicons/react": "~2.2.0",
     "@noir-lang/noir_js": "1.0.0-beta.3",
     "@rainbow-me/rainbowkit": "2.2.11",

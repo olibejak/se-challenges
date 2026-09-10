@@ -16,48 +16,48 @@ export default deployScript(
   async ({ deploy, namedAccounts }) => {
     const { deployer } = namedAccounts;
 
-    const ownerAddress = "0x0000000000000000000000000000000000000001";
+    const ownerAddress = "0x6A631AeB3EFA3360F9C71c16349dc6913C8F05f7";
 
     /// checkpoint 6 //////
-    const verifierAddress = "0x0000000000000000000000000000000000000002"; // placeholder
-    // const verifier = await deploy("HonkVerifier", {
-    //   account: deployer,
-    //   artifact: artifacts.HonkVerifier,
-    //   args: [],
-    // });
+    // const verifierAddress = "0x0000000000000000000000000000000000000002"; // placeholder
+    const verifier = await deploy("HonkVerifier", {
+      account: deployer,
+      artifact: artifacts.HonkVerifier,
+      args: [],
+    });
 
     /// checkpoint 2 //////
-    const leanIMTAddress = "0x0000000000000000000000000000000000000003"; // placeholder
-    // const poseidon3 = await deploy("PoseidonT3", {
-    //   account: deployer,
-    //   artifact: artifacts.PoseidonT3,
-    //   args: [],
-    // });
+    // const leanIMTAddress = "0x0000000000000000000000000000000000000003"; // placeholder
+    const poseidon3 = await deploy("PoseidonT3", {
+      account: deployer,
+      artifact: artifacts.PoseidonT3,
+      args: [],
+    });
 
-    // const leanIMT = await deploy(
-    //   "LeanIMT",
-    //   {
-    //     account: deployer,
-    //     artifact: artifacts.LeanIMT,
-    //     args: [],
-    //   },
-    //   {
-    //     libraries: {
-    //       PoseidonT3: poseidon3.address,
-    //     },
-    //   },
-    // );
+    const leanIMT = await deploy(
+      "LeanIMT",
+      {
+        account: deployer,
+        artifact: artifacts.LeanIMT,
+        args: [],
+      },
+      {
+        libraries: {
+          PoseidonT3: poseidon3.address,
+        },
+      },
+    );
 
     await deploy(
       "Voting",
       {
         account: deployer,
         artifact: artifacts.Voting,
-        args: [ownerAddress, verifierAddress, "Should we build zk apps?"],
+        args: [ownerAddress, verifier.address, "Should we build zk apps?"],
       },
       {
         libraries: {
-          LeanIMT: leanIMTAddress,
+          LeanIMT: leanIMT.address,
         },
       },
     );

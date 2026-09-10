@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 //// Checkpoint 8 //////
-// import { UltraHonkBackend } from "@aztec/bb.js";
-// // @ts-ignore
-// import { Noir } from "@noir-lang/noir_js";
-// import { LeanIMT } from "@zk-kit/lean-imt";
-// import { poseidon1, poseidon2 } from "poseidon-lite";
+import { UltraHonkBackend } from "@aztec/bb.js";
+// @ts-ignore
+import { Noir } from "@noir-lang/noir_js";
+import { LeanIMT } from "@zk-kit/lean-imt";
+import { poseidon1, poseidon2 } from "poseidon-lite";
+import { encodeAbiParameters, toHex } from "viem";
 import { useAccount } from "wagmi";
 import { useDeployedContractInfo, useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 import { useChallengeState } from "~~/services/store/challengeStore";
@@ -24,12 +25,60 @@ const generateProof = async (
   _circuitData: any,
 ) => {
   //// Checkpoint 8 //////
+  const nullifierHash = poseidon1([BigInt(_nullifier)]);
+  const tree = new LeanIMT((a: bigint, b: bigint) => poseidon2([a, b]));
+
+  const leaves = _leaves.map(event => {
+    return event?.args.value;
+  });
+  const leavesReversed = leaves.reverse();
+  tree.insertMany(leavesReversed as bigint[]);
+
+  const proof = tree.generateProof(_index);
+  const siblings = proof.siblings.map(sibling => {
+    return sibling.toString();
+  });
+
+  const siblingsLengthDiff = 16 - siblings.length;
+  for (let i = 0; i < siblingsLengthDiff; i++) {
+    siblings.push("0");
+  }
+
+  const input = {
+    nullifier_hash: nullifierHash.toString(),
+    nullifier: BigInt(_nullifier).toString(),
+    secret: BigInt(_secret).toString(),
+    root: _root.toString(),
+    vote: _vote,
+    depth: _depth.toString(),
+    index: _index.toString(),
+    siblings: siblings,
+  };
+
   try {
-    void [_root, _vote, _depth, _nullifier, _secret, _index, _leaves, _circuitData];
-    return {
-      proof: new Uint8Array([0]),
-      publicInputs: [0n],
-    };
+    const noir = new Noir(_circuitData);
+    const { witness } = await noir.execute(input);
+    console.log("witness", witness);
+
+    const honk = new UltraHonkBackend(_circuitData.bytecode, { threads: 1 });
+
+    const originalLog = console.log;
+    console.log = () => {};
+
+    const { proof, publicInputs } = await honk.generateProof(witness, {
+      keccak: true,
+    });
+    console.log = originalLog;
+    console.log("proof", proof);
+
+    const proofHex = toHex(proof);
+    const inputsHex = publicInputs.map(x =>
+      typeof x === "string" ? (x as `0x${string}`) : toHex(x as Uint8Array, { size: 32 }),
+    );
+    const result = encodeAbiParameters([{ type: "bytes" }, { type: "bytes32[]" }], [proofHex, inputsHex]);
+    console.log("result", result);
+
+    return { proof, publicInputs };
   } catch (error) {
     console.log(error);
     throw error;
